@@ -1,4 +1,4 @@
-use std::{fs::OpenOptions, io::{self, Seek, SeekFrom}, path::Path};
+use std::{fs::OpenOptions, io::{self, Seek, SeekFrom}, path::Path, u32};
 use byteorder::{LittleEndian, ReadBytesExt};
 
 #[macro_use]
@@ -187,6 +187,38 @@ pub fn read_data_directory<R: io::Read>(read: &mut R) -> io::Result<DataDirector
     })
 }
 
+#[derive(Debug)]
+pub struct SectionHeader {
+    name: [u8; 8],
+    phys_addr_or_virt_size: u32,
+    virt_addr: u32,
+    size_of_raw_data: u32,
+    ptr_to_raw_data: u32,
+    ptr_to_relocations: u32,
+    ptr_to_line_numbers: u32,
+    number_of_relocations: u16,
+    number_of_line_numbers: u16,
+    characteristics: u32,
+}
+
+pub fn read_section_header<R: io::Read>(read: &mut R) -> io::Result<SectionHeader> {
+    Ok(SectionHeader {
+        name: [
+            read.read_u8()?, read.read_u8()?, read.read_u8()?, read.read_u8()?, 
+            read.read_u8()?, read.read_u8()?, read.read_u8()?, read.read_u8()?, 
+        ],
+        phys_addr_or_virt_size: read.read_u32::<LittleEndian>()?,
+        virt_addr: read.read_u32::<LittleEndian>()?,
+        size_of_raw_data: read.read_u32::<LittleEndian>()?,
+        ptr_to_raw_data: read.read_u32::<LittleEndian>()?,
+        ptr_to_relocations: read.read_u32::<LittleEndian>()?,
+        ptr_to_line_numbers: read.read_u32::<LittleEndian>()?,
+        number_of_relocations: read.read_u16::<LittleEndian>()?,
+        number_of_line_numbers: read.read_u16::<LittleEndian>()?,
+        characteristics: read.read_u32::<LittleEndian>()?,
+    })
+}
+
 fn main() {
     let matches = clap::clap_app!(myapp =>
         (version: crate_version!())
@@ -214,4 +246,11 @@ fn main() {
     println!("File alignment: {}", nt_head.optional_header.file_alignment);
     println!("Size of image: {}", nt_head.optional_header.size_of_image);
     println!("Number of Rva and sizes: {}", nt_head.optional_header.number_of_rva_and_sizes); 
+    for i in 0..nt_head.file_header.number_of_sections {
+        let section_header = read_section_header(&mut file)
+            .expect("read section header");
+        println!("{:?}", section_header);
+        let name = String::from_utf8_lossy(&section_header.name);
+        println!("Section #{}: {}", i, name);
+    }
 }
