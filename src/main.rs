@@ -249,8 +249,11 @@ fn main() {
     for i in 0..nt_head.file_header.number_of_sections {
         let section_header = read_section_header(&mut file)
             .expect("read section header");
-        println!("{:?}", section_header);
         let name = String::from_utf8_lossy(&section_header.name);
-        println!("Section #{}: {}", i, name);
+        println!(
+            "Section #{}: {}, va: {:#08x}, raw ptr: {:#08x}, size: {:#08x}", 
+            i, name, section_header.virt_addr,
+            section_header.ptr_to_raw_data, section_header.size_of_raw_data,
+        );
     }
 }
