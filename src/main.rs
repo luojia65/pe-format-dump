@@ -251,9 +251,10 @@ fn main() {
             .expect("read section header");
         let name = String::from_utf8_lossy(&section_header.name);
         println!(
-            "Section #{}: {}\t, va: {:#08x}, raw ptr: {:#08x}, size: {:#08x}", 
+            "Section #{}: {}\tva: {:#08x}, raw ptr: {:#08x}, size: {:#08x}", 
             i, name, section_header.virt_addr,
             section_header.ptr_to_raw_data, section_header.size_of_raw_data,
         );
     }
+    
 }
