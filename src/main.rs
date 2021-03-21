@@ -4,7 +4,7 @@ use byteorder::{LittleEndian, ReadBytesExt};
 #[macro_use]
 extern crate clap;
 
-const IMAGE_DIRECTORY_ENTRY_EXPORT: usize = 0;
+pub const IMAGE_DIRECTORY_ENTRY_EXPORT: usize = 0;
 
 #[derive(Debug)]
 pub struct DosHead {
