@@ -4,6 +4,8 @@ use byteorder::{LittleEndian, ReadBytesExt};
 #[macro_use]
 extern crate clap;
 
+const IMAGE_DIRECTORY_ENTRY_EXPORT: usize = 0;
+
 #[derive(Debug)]
 pub struct DosHead {
     e_magic: u16,
@@ -174,7 +176,7 @@ pub fn read_optional_header<R: io::Read>(read: &mut R) -> io::Result<OptionalHea
     })
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct DataDirectory {
     virtual_address: u32,
     size: u32,
@@ -219,6 +221,37 @@ pub fn read_section_header<R: io::Read>(read: &mut R) -> io::Result<SectionHeade
     })
 }
 
+#[derive(Debug)]
+pub struct ExportDirectory {
+    characteristics: u32,
+    time_date_stamp: u32,
+    major_version: u16,
+    minor_version: u16,
+    name: u32,
+    base: u32,
+    number_of_functions: u32,
+    number_of_names: u32,
+    address_of_functions: u32,
+    address_of_names: u32,
+    address_of_name_ordinals: u32,
+}
+
+pub fn read_export_directory<R: io::Read>(read: &mut R) -> io::Result<ExportDirectory> {
+    Ok(ExportDirectory {
+        characteristics: read.read_u32::<LittleEndian>()?,
+        time_date_stamp: read.read_u32::<LittleEndian>()?,
+        major_version: read.read_u16::<LittleEndian>()?,
+        minor_version: read.read_u16::<LittleEndian>()?,
+        name: read.read_u32::<LittleEndian>()?,
+        base: read.read_u32::<LittleEndian>()?,
+        number_of_functions: read.read_u32::<LittleEndian>()?,
+        number_of_names: read.read_u32::<LittleEndian>()?,
+        address_of_functions: read.read_u32::<LittleEndian>()?,
+        address_of_names: read.read_u32::<LittleEndian>()?,
+        address_of_name_ordinals: read.read_u32::<LittleEndian>()?,
+    })
+}
+
 fn main() {
     let matches = clap::clap_app!(myapp =>
         (version: crate_version!())
@@ -256,5 +289,4 @@ fn main() {
             section_header.ptr_to_raw_data, section_header.size_of_raw_data,
         );
     }
-    
 }
